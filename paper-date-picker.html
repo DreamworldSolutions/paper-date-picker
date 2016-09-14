@@ -80,6 +80,7 @@ styling:
         width: 512px;
         height: 248px;
         @apply(--layout-horizontal);
+        @apply(--date-picker);
       }
       #heading {
         width: 168px;
@@ -91,11 +92,12 @@ styling:
         width: 328px;
         height: 428px;
         @apply(--layout-vertical);
+        @apply(--narrow-date-picker);
       }
       :host([narrow]) #heading {
         width: auto;
         height: 96px;
-        padding: 16px 24px;
+        @apply(--narrow-paper-date-picker-header);
       }
 
       /** Heading ********************/
@@ -106,6 +108,7 @@ styling:
         background: var(--default-primary-color);
         @apply(--layout-vertical);
         @apply(--layout-around-justfied);
+        @apply(--date-picker-header);
       }
       #heading .date,
       #heading .year {
@@ -126,7 +129,7 @@ styling:
       #heading .year {
         @apply(--paper-font-body2);
         font-size: 16px;
-        @apply(--paper-date-picker-heading-date);
+        @apply(--paper-date-picker-heading-year);
       }
       #heading:not(.pg-chooseYear) .year,
       #heading.pg-chooseYear .date {
