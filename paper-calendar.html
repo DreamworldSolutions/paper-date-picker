@@ -1,14 +1,14 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
-<link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../paper-ripple/paper-ripple.html">
-<link rel="import" href="../paper-styles/paper-styles.html">
+<link rel="import" href="../paper-styles/color.html">
 <link rel="import" href="../paper-styles/default-theme.html">
 <link rel="import" href="../paper-styles/shadow.html">
 <link rel="import" href="../paper-styles/typography.html">
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="../moment-element/moment-with-locales-import.html">
+<link rel="import" href="../moment-element/moment-import.html">
+<link rel="import" href="paper-date-picker-icons.html">
 
 <dom-module id="paper-calendar">
   <template>
@@ -121,7 +121,6 @@
         @apply(--layout-center);
         @apply(--layout-center-justified);
         @apply(--layout-flex);
-        @apply(--paper-calender-month-name);
       }
       .month-weekdays {
         color: var(--secondary-text-color);
@@ -156,7 +155,7 @@
         background: none;
       }
       .day-item.selected {
-        background: var(--default-primary-color);
+        background: var(--paper-date-picker-primary-color, --default-primary-color);
       }
       .day-item.selected .day {
         color: var(--text-primary-color);
@@ -168,7 +167,7 @@
         color: var(--text-disabled-color, #9d9d9d);
       }
       .day-item.today .day {
-        color: var(--default-primary-color);
+        color: var(--paper-date-picker-primary-color, --default-primary-color);
       }
       .day-item.selected.today .day {
         color: var(--text-primary-color);
@@ -214,14 +213,14 @@
         <div class="flex col self-stretch">
           <div class="btn" on-tap="_swipePrevMonth">
             <paper-ripple center class="ripple circle"></paper-ripple>
-            <iron-icon class="icon flex" icon="chevron-left"></iron-icon>
+            <iron-icon class="icon flex" icon="date-picker:chevron-left"></iron-icon>
           </div>
         </div>
         <div class="flex-5"></div>
         <div class="flex col self-stretch">
           <div class="btn" on-tap="_swipeNextMonth">
             <paper-ripple center class="ripple circle"></paper-ripple>
-            <iron-icon class="icon flex" icon="chevron-right"></iron-icon>
+            <iron-icon class="icon flex" icon="date-picker:chevron-right"></iron-icon>
           </div>
         </div>
       </div>
@@ -243,6 +242,14 @@
 
     // Number of months to preload on both sides of the current month
     var PRELOAD_MONTHS = 1;
+
+    function dateDiff(a, b) {
+      a = new Date(a.getTime());
+      b = new Date(b.getTime());
+      a.setHours(0, 0, 0, 0);
+      b.setHours(0, 0, 0, 0);
+      return (a.getTime() - b.getTime()) / 86400000;
+    }
 
     Polymer({
       is: 'paper-calendar',
@@ -411,11 +418,10 @@
       },
       _getDayClass: function(cssClass, date) {
         if (date) {
-          var timestamp = date.getTime();
-          if (timestamp === this.today.getTime()) {
+          if (dateDiff(date, this.today) === 0) {
             cssClass += ' today';
           }
-          if (timestamp === this.date.getTime()) {
+          if (dateDiff(date, this.date) === 0) {
             cssClass += ' selected';
             this.async(function() {
               this._updateSelection();
@@ -517,11 +523,13 @@
         }.bind(this));
       },
       _swipeNextMonth: function() {
-        this._translateX(-this._containerWidth * 2, 'swipe', function() {
-          this.set('_contentClass', '');
-          this.transform('translateX(' + this._startPos + 'px)', this.$.months);
-          this.fire('swiped', {direction: 'left'});
-        }.bind(this));
+        if (!this.maxDate || this.currentMonth < this.maxDate.getMonth() + 1) {
+          this._translateX(-this._containerWidth * 2, 'swipe', function() {
+            this.set('_contentClass', '');
+            this.transform('translateX(' + this._startPos + 'px)', this.$.months);
+            this.fire('swiped', {direction: 'left'});
+          }.bind(this));
+        }
       },
       _getMonthIdx: function(pos) {
         // returns the index for the visible month according to the given position
@@ -622,21 +630,22 @@
         }
         this.currentYear = date.getFullYear();
         this.currentMonth = date.getMonth() + 1;
-        // Clone the date object to force Polymer binding to notice a change.
-        // But only trigger a notification if there actually is a difference.
-        date = new Date(date.getTime());
-        date.setHours(0, 0, 0, 0);
+        // Only trigger a notification if there actually is a difference.
         if (oldValue && date.getTime && oldValue.getTime && date.getTime() === oldValue.getTime()) {
           return;
         }
-        this.set('date', date);
         this._updateSelection();
       },
       _tapDay: function(event) {
         if (!this._withinValidRange(event.model.item.date)) {
           return false;
         }
-        this.date = event.model.item.date;
+        var item = event.model.item;
+        var newDate = new Date(this.date.getTime());
+        newDate.setYear(item.year);
+        newDate.setMonth(item.month);
+        newDate.setDate(item.day);
+        this.date = newDate;
       },
       _isValidDate: function(date) {
         return date && date.getTime && !isNaN(date.getTime());
