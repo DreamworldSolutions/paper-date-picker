@@ -91,11 +91,13 @@ styling:
         width: 328px;
         height: 428px;
         @apply(--layout-vertical);
+        @apply(--narrow-date-picker);
       }
       :host([narrow]) #heading {
         width: auto;
         height: 96px;
         padding: 16px 24px;
+        @apply(--narrow-date-picker-header);
       }
 
       /** Heading ********************/
@@ -126,7 +128,7 @@ styling:
       #heading .year {
         @apply(--paper-font-body2);
         font-size: 16px;
-        @apply(--paper-date-picker-heading-date);
+        @apply(--paper-date-picker-heading-year);
       }
       #heading:not(.pg-chooseYear) .year,
       #heading.pg-chooseYear .date {
